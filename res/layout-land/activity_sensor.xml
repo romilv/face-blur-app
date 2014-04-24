@@ -1,0 +1,51 @@
+<TableLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    tools:context=".SensorActivity" 
+    android:stretchColumns="1"
+    android:orientation="horizontal">
+
+    
+    <TableRow>
+        <TextView 
+            android:id="@+id/orientation_label"
+            android:text="Orientation"
+		/>
+    </TableRow>
+    
+    <TableRow>
+        <TextView 
+            android:id="@+id/pitch_x_1_label"
+            android:text="Pitch X 1		"
+            android:textSize="30sp"/>
+        <TextView 
+            android:id="@+id/pitch_x_1_value"
+            android:textSize="30sp"
+        />
+    </TableRow>
+    
+    <TableRow>
+        <TextView 
+            android:id="@+id/roll_y_2_label"
+            android:text="Roll Y 2		"
+            android:textSize="30sp" />
+        <TextView 
+            android:id="@+id/roll_y_2_value"
+            android:textSize="30sp"
+        />
+    </TableRow>
+    
+    <TableRow>
+        <TextView 
+            android:id="@+id/azimuth_z_0_label"
+            android:text="Azimuth Z 0	 "
+            android:textSize="30sp"/>
+        <TextView 
+            android:id="@+id/azimuth_z_0_value"
+            android:textSize="30sp"
+        />
+    </TableRow>
+    
+</TableLayout>
