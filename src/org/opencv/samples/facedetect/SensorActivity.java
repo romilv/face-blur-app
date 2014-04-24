@@ -1,16 +1,12 @@
 package org.opencv.samples.facedetect;
 
-import org.opencv.samples.facedetect.R;
-
+import android.app.Activity;
+import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.app.Activity;
-import android.content.Context;
-import android.util.Log;
-import android.view.Menu;
 import android.widget.TextView;
 
 public class SensorActivity extends Activity implements SensorEventListener {
@@ -40,11 +36,15 @@ public class SensorActivity extends Activity implements SensorEventListener {
 	
 	private int mRoll2, mPitch1, mAzimuth0;
 	
+	// Activity simply reads recordings of Accelerometer and Magnetometer for purpose of mapping readings
+	// to compass directions
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_sensor);
 		
+		// access recordings of Accelerometer and Magetometer
 		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
@@ -59,7 +59,6 @@ public class SensorActivity extends Activity implements SensorEventListener {
 		mOrientYRoll.setText("0.00");
 		mOrientZAzimuth.setText("0.00");
 		
-		
 	}
 	
 	@Override
@@ -68,6 +67,8 @@ public class SensorActivity extends Activity implements SensorEventListener {
 		mLastAccelerometerSet = false;
 		mLastMagnetometerSet = false;
 		mLastRotationVectorSet = false;
+		
+		// register sensors
 		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
 		mSensorManager.registerListener(this, mMagnetometer, SensorManager.SENSOR_DELAY_UI);
 		mSensorManager.registerListener(this, mRotationVector, SensorManager.SENSOR_DELAY_UI);
@@ -90,8 +91,6 @@ public class SensorActivity extends Activity implements SensorEventListener {
 		} 
 		
 		if (event.sensor == mRotationVector) {
-//			Log.i(TAG, Integer.toString(event.values.length));
-
 			System.arraycopy(event.values, 0, mLastRotationVector, 0, event.values.length);
 			mLastRotationVectorSet = true;
 		}
@@ -109,33 +108,9 @@ public class SensorActivity extends Activity implements SensorEventListener {
 			mOrientZAzimuth.setText(String.format("%d", mAzimuth0));
 		}
 		
-		
-//		if (mLastAccelerometerSet && mLastMagnetometerSet) {
-//			SensorManager.getRotationMatrix(mRotationMatrix, null, mLastAccelerometer, mLastMagnetometer);
-//			
-////			Log.i(TAG, Integer.toString(mRotationMatrix.length));
-////			for (int i = 0; i < mRotationMatrix.length; i ++) {
-////				Log.i(TAG, Float.toString(mRotationMatrix[i]) + i);
-////				
-////			}
-//			
-//
-//			SensorManager.getOrientation(mRotationMatrix, mOrientation);
-////			Log.i(TAG, String.format("Orientation: %f,  %f, %f", mOrientation[0], mOrientation[1], mOrientation[2]));
-//			
-//			mAzimuth0 = (int) ( mOrientation[0] * 57.2957795f);
-//			mPitch1 =  (int) (mOrientation[1] * 57.2957795f);
-//			mRoll2 = (int) (mOrientation[2] * 57.2957795f);
-//			
-//			mOrientXPitch.setText(String.format("%d", mPitch1));
-//			mOrientYRoll.setText(String.format("%d", mRoll2));
-//			mOrientZAzimuth.setText(String.format("%d", mAzimuth0));
-//		}
-		
 	}
 	
 	@Override
-	public void onAccuracyChanged(Sensor sensor, int accuracy) {
-	}
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {	}
 
 }

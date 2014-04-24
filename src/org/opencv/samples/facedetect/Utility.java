@@ -9,6 +9,7 @@ import android.util.Log;
 public class Utility {
 	
 	private static final String TAG = "PhotoPrivacy::Utility";
+	// app's backend link
 	private static final String URL_NOTIFY = "http://rocky-citadel-2836.herokuapp.com/user/";
 	private static final String URL_GET_CLOSEST_USERS = "http://rocky-citadel-2836.herokuapp.com/user/";
 	private static String uniqueUserId;
@@ -29,9 +30,13 @@ public class Utility {
 	}
 	
 	public synchronized static void setUniqueUserId (Context context) {
+		// if uId is null then load from shared preferences
 		if (uniqueUserId == null) {
 			SharedPreferences sharedPrefs = context.getSharedPreferences(PREF_UNIQUE_ID, Context.MODE_PRIVATE);
 			uniqueUserId = sharedPrefs.getString(PREF_UNIQUE_ID, null);
+			
+			// if upon loading from shared preferences, uId is still null it implies this is first time app is opened
+			// assign new id to the device for current and future sessions
 			if (uniqueUserId == null) {
 				uniqueUserId = UUID.randomUUID().toString();
 				Editor editor = sharedPrefs.edit();

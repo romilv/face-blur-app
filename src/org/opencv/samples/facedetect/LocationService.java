@@ -59,7 +59,6 @@ public class LocationService extends Service {
 		mLocatiomManager = null;
 		mLocationListener = null;
 		location = null;
-//		Toast.makeText(getApplicationContext(), "onDestroy()", Toast.LENGTH_SHORT).show();
 		super.onDestroy();
 	}
 	
@@ -78,6 +77,7 @@ public class LocationService extends Service {
 		final double longitude = location.getLongitude();
 		String str = counter + " " + " lat " + latitude + " lon " + longitude;
 		counter += 1;
+		
 		// when location is updated send the data
 		Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
 		
@@ -87,13 +87,15 @@ public class LocationService extends Service {
 			if (mFirstTimeflag) {
 //				mFirstTimeflag = false;
 				Toast.makeText(getApplicationContext(), "GPS SENDING SUCCESSFULLY TO SERVER", Toast.LENGTH_SHORT).show();
-//				Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
 			}
 		}
-		else
-			Toast.makeText(getApplicationContext(), "NOT CONNECTED TO INTERNET", Toast.LENGTH_SHORT).show();
+		else {
+			Toast.makeText(getApplicationContext(), "KINDLY CONNECT TO INTERNET", Toast.LENGTH_SHORT).show();
+			mRunService = false;
+		}
 	}
 	
+	// check if network is accessible and settings are properly configured on device
 	private boolean isNetworkAvailable() {
 		ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
@@ -140,7 +142,11 @@ public class LocationService extends Service {
 			Log.d("LocationService", e.getLocalizedMessage());
 		}
 		
-		return result;
+		if (result != null) {
+			return result;
+		}
+		
+		return "";
 	}
 	
 	private class MyLocationList implements LocationListener {

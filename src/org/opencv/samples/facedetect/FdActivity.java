@@ -63,7 +63,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private int                    mDetectorType       = JAVA_DETECTOR;
     private String[]               mDetectorName;
 
-    private float                  mRelativeFaceSize   = 0.2f;
+    private float                  mRelativeFaceSize   = 0.4f;
     private int                    mAbsoluteFaceSize   = 0;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
@@ -137,10 +137,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, "called onCreate");
+    	
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         setContentView(R.layout.face_detect_surface_view);
 
         mLinearLayout = (LinearLayout) findViewById(R.id.fd_activity_lin_layout);
@@ -148,29 +147,22 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mOpenCvCameraView.setCvCameraViewListener(this);
         
         mFlagTakePic = false;
+        
         mLinearLayout.setOnTouchListener(new OnTouchListener() {
-			
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
-				
+				// if user touches screen, set flag to indicate that current frame should be saved as image
 				if (event.getAction() == MotionEvent.ACTION_UP) {
 					counter += 1;
-//					String str = counter + event.toString();
-//					Toast.makeText(getApplicationContext(), str, Toast.LENGTH_SHORT).show();
 					mFlagTakePic = true;
-
 				}
-				
-//				counter += 1;
-//				String str = counter + " TOUCHED SCREEN";
-//				Toast.makeText(getApplicationContext(), event.toString(), Toast.LENGTH_SHORT).show();
-				
-//				mFlagTakePic = true;
-				
 				return true;
 			}
 		});
                 
+        // Design choice
+        // Code in case button is used instead of simply touching the screen to capture image
+        
 //        mButtonTakePic = (Button) findViewById(R.id.btn_take_pic);
 //        mButtonTakePic.setOnClickListener(new OnClickListener() {
 //			@Override
@@ -193,6 +185,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
+        
+        // indicate to user how to capture image
         Toast.makeText(getApplicationContext(), "TOUCH SCREEN TO TAKE A PICTURE", Toast.LENGTH_SHORT).show();
     }
 
@@ -248,7 +242,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Mat face;
         String faceName;
         
-        // if take a picture then save image
+        // if take a picture flag is set, then save image
         if(mFlagTakePic) {
         	mFlagTakePic = false;
         	String s = "";
@@ -257,14 +251,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         		s = s + " " + i + " " + facesArray[i].x + ", " + facesArray[i].y + ", tl " + facesArray[i].tl();
 			}
 			
-//			final String toastS = s;
-			Log.d(TAG, s);
-			
         	FdActivity.this.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					Toast.makeText(getApplicationContext(), "Button clicked", Toast.LENGTH_SHORT).show();
-//	        		Toast.makeText(getApplicationContext(), toastS, Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "Image captured", Toast.LENGTH_SHORT).show();
 				}
 			});
         	
@@ -301,6 +291,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         return mRgba;        
     }
     
+    // Mat to be saved
+    // String name - name of image to be stored
+    // boolean imageCaptured - true when full image is saved, false when we only try to save detected faces
+    
     public void saveImage(Mat mat, final String name, boolean imageCaptured) {
     	File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
     	File file = new File(path, name);
@@ -308,6 +302,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     	
     	String fileName = file.toString();
     	bool = Highgui.imwrite(fileName, mat);
+    	
     	if (bool) {
     		Log.d(TAG, "file " + name + " saved successfully");
     	} else {
@@ -316,6 +311,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     	
     	if (imageCaptured) {
     	
+    		// intent to next activity where image with faces blurred
 	    	FdActivity.this.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {

@@ -14,15 +14,20 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	private Button mBtnTakePicture;
 	private Button mBtnSendCoordinates;
-	private boolean mSendCoordinates = false;
+	private static boolean mSendCoordinates = false;
 	
 	private Intent mLocationServiceIntent;
 
+	// Choose to either start sending coordinates to server to indicate you wish your face to be blurred from
+	// images taken by others, or
+	// choose to take a picture
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
+		// Set's unique user id for each device or loads id from previous session
 		Utility.setUniqueUserId(getApplicationContext());
 		
 		mBtnTakePicture = (Button) findViewById(R.id.btn_take_picture);
@@ -36,20 +41,25 @@ public class MainActivity extends Activity implements OnClickListener {
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
+		
 		case R.id.btn_take_picture:
 			Intent intent1 = new Intent(this, FdActivity.class);
 			startActivity(intent1);
 			break;
+			
 		case R.id.btn_send_location:
-			mSendCoordinates = !mSendCoordinates;
+			
+			mSendCoordinates = !mSendCoordinates; // static value, shared across intents
+			
 			if (mLocationServiceIntent == null)
 				mLocationServiceIntent = new Intent(this, LocationService.class);
+			
 			if (mSendCoordinates) 
 				startService(mLocationServiceIntent);
+			
 			else { 
-				Toast.makeText(getApplicationContext(), "stop service called", Toast.LENGTH_SHORT).show();
-				stopService(mLocationServiceIntent);
-				
+//				Toast.makeText(getApplicationContext(), "stop service called", Toast.LENGTH_SHORT).show();
+				stopService(mLocationServiceIntent);	
 			}
 			break;
 		}
