@@ -13,11 +13,16 @@ import android.view.Menu;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import org.opencv.core.Mat;
+import org.opencv.highgui.Highgui;
+
 public class DisplayImageActivity extends Activity {
 	
 	private ImageView mImageView;
 	private String mName;
 	private File mFile;
+	
+	private Mat mMat;
 	
 
 	@Override
@@ -41,6 +46,13 @@ public class DisplayImageActivity extends Activity {
     	}
     	else {
     		Toast.makeText(getApplicationContext(), "No image found", Toast.LENGTH_SHORT).show();
+    	}
+    	
+    	// modification - reading using opencv and manipulating image accordingly
+    	if (mFile.exists()) {
+    		mMat = Highgui.imread(mFile.toString());
+//    		if (mMat.)
+    		
     	}
 		
 	}

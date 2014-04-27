@@ -14,8 +14,9 @@
     <color name="yellow">#FFBB33</color>
 
     <string name="title_activity_display_image">DisplayImageActivity</string>
-    <string name="hello_world">Hello world!</string>
     <string name="title_activity_compass">CompassActivity</string>
     <string name="title_activity_sensor">SensorActivity</string>
+    <string name="title_activity_capture_image">CaptureImageActivity</string>
+    <string name="title_activity_process_image">ProcessImageActivity</string>
 
 </resources>
