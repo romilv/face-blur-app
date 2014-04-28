@@ -14,7 +14,10 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
+import android.widget.SimpleAdapter.ViewBinder;
 
 public class CaptureImageActivity extends Activity {
 	
@@ -49,6 +52,16 @@ public class CaptureImageActivity extends Activity {
 
     	
     	startActivityForResult(cameraIntent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+    	
+    	Button mButton = (Button) findViewById(R.id.btn_take_pic);
+    	mButton.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+		    	startActivityForResult(cameraIntent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+			}
+		});
     	
     	if (DEBUG) {
 	    	Log.i(TAG, "file name: " + fileName);
@@ -97,8 +110,6 @@ public class CaptureImageActivity extends Activity {
 	                Toast.makeText(getApplicationContext(), "Your Path:"+filePath, 2000).show();
 	                Toast.makeText(getApplicationContext(), "Your Filename:"+filename, 2000).show();
                 }
-                Toast.makeText(getApplicationContext(), "Your Path:"+filePath, 2000).show();
-                Toast.makeText(getApplicationContext(), "Your Filename:"+filename, 2000).show();
 				
                 
                 // Now pass the filename over to the processing activity

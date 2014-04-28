@@ -2,12 +2,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    tools:context=".ProcessImageActivity" >
+    tools:context=".ProcessImageActivity"
+    android:orientation="vertical" >
     
     <ImageView 
         android:id="@+id/img_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" 
+        android:background="@color/white"
+        android:layoutDirection="rtl"/>
     
     
 </LinearLayout>

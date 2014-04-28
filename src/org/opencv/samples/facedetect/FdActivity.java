@@ -113,6 +113,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
                     } catch (IOException e) {
                         e.printStackTrace();
+                        Toast.makeText(getApplicationContext(), "failed to load cascade", Toast.LENGTH_SHORT).show();
                         Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
                     }
 
