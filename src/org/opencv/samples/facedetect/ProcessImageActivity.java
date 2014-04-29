@@ -43,6 +43,7 @@ public class ProcessImageActivity extends Activity {
     public static final int        JAVA_DETECTOR       = 0;
     public static final int        NATIVE_DETECTOR     = 1;
     
+    private float                  mRelativeFaceSize   = 0.1f;
     private int                    mAbsoluteFaceSize   = 0;
 
 
@@ -81,6 +82,26 @@ public class ProcessImageActivity extends Activity {
 		setContentView(R.layout.activity_process_image);
 		
 		mImageView = (ImageView) findViewById(R.id.img_view);
+	}
+	
+	@Override
+	protected void onResume() {
+        super.onResume();
+        // initialize OpenCV
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mOpenCvCallback);
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		if (mMat != null) mMat.release();
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.process_image, menu);
+		return true;
 	}
 	
 	protected void loadClassifier() {
@@ -157,11 +178,12 @@ public class ProcessImageActivity extends Activity {
 //			Log.i(TAG, "dims " + mMat.dims());
 //			Log.i(TAG, "empty" + mMat.empty());
 //			Log.i(TAG, "type" + mMat.type());
-//			
 //			Log.i(TAG, "size" + mMat.size());
 		}
 
-		loadToImageView(mMat);
+		
+//		loadToImageView(mMat);
+		
 		if (mMat != null && !mMat.empty()) {
 			detectFaces();
 		}
@@ -170,17 +192,31 @@ public class ProcessImageActivity extends Activity {
 	
 	protected void detectFaces() {
 		MatOfRect faces = new MatOfRect();
-		Mat mGrayMat = new Mat();
 		
+		Mat mGrayMat = new Mat();
 		
 		// get the gray mat
 		Imgproc.cvtColor(mMat, mGrayMat, Imgproc.COLOR_BGR2GRAY);
 		
-		Log.i(TAG, "channels " + mGrayMat.channels());
-		Log.i(TAG, "type " + mGrayMat.type());
+		if (DEBUG) {
+//			Log.i(TAG, "channels " + mGrayMat.channels());
+//			Log.i(TAG, "type " + mGrayMat.type());
+		}
 
-		mNativeDetector.setMinFaceSize(0);
+//		mNativeDetector.setMinFaceSize(0);
 
+		
+        if (mAbsoluteFaceSize == 0) {
+            int height = mGrayMat.rows();
+            
+            if (Math.round(height * mRelativeFaceSize) > 0) {
+                mAbsoluteFaceSize = Math.round(height * mRelativeFaceSize);
+            }
+            mNativeDetector.setMinFaceSize(mAbsoluteFaceSize);
+        }
+        
+        Toast.makeText(getApplicationContext(), "absol face size " + mAbsoluteFaceSize, Toast.LENGTH_SHORT).show();
+		
 		mNativeDetector.start();
 		
         if (mDetectorType == JAVA_DETECTOR) {
@@ -204,28 +240,29 @@ public class ProcessImageActivity extends Activity {
             Core.rectangle(mMat, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
         }
         
-        for (int i = 0; i < facesArray.length; i++) {
-            Core.rectangle(mGrayMat, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
-        }
-        
-        saveImage(mMat, "picture2.jpg", true);
-        saveImage(mGrayMat, "picture2gray.jpg", true);
-        
-//        loadToImageView(mMat);
+//        saveImage(mMat, "picture2.jpg", true);
+//        saveImage(mGrayMat, "picture2gray.jpg", true);
         
         mGrayMat.release();
+
+        loadToImageView(mMat);
+        
 	}
 	
-	protected void loadToImageView(Mat m) {
-		Mat tempMat = new Mat();
+	protected void loadToImageView(Mat mat) {
+		Toast.makeText(getApplicationContext(), "Making call", Toast.LENGTH_SHORT).show();
+//		Mat tempMat = new Mat();
 
 		// assuming not gray
 		// restore color of mMat before display
-		Imgproc.cvtColor(m, tempMat, Imgproc.COLOR_BGR2RGB);
+		Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2RGB);
 		
-		Bitmap imageToShow = Bitmap.createBitmap(tempMat.cols(), tempMat.rows(), Bitmap.Config.ARGB_8888);
+		Bitmap imageToShow = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888);
+//		imageToShow.recycle();
 		
-		Utils.matToBitmap(tempMat, imageToShow);
+		Utils.matToBitmap(mat, imageToShow);
+		
+//		tempMat.release();
 		
 		try {
 			ExifInterface exif = new ExifInterface(filepath);
@@ -242,13 +279,14 @@ public class ProcessImageActivity extends Activity {
 				matrix.postRotate(0);
 			
 			Toast.makeText(getApplicationContext(), "orientation" + orientation, Toast.LENGTH_SHORT).show();
-			Bitmap rotatedBitmap = Bitmap.createBitmap(imageToShow, 0, 0, imageToShow.getWidth(), imageToShow.getHeight(), matrix, true);
-			mImageView.setImageBitmap(rotatedBitmap);
+//			Bitmap rotatedBitmap = Bitmap.createBitmap(imageToShow, 0, 0, imageToShow.getWidth(), imageToShow.getHeight(), matrix, true);
+//			mImageView.setImageBitmap(rotatedBitmap);
 		
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-//		mImageView.setImageBitmap(imageToShow);
+		
+		mImageView.setImageBitmap(imageToShow);
 
 	}
 	
@@ -281,23 +319,5 @@ public class ProcessImageActivity extends Activity {
 //			});
 //    	}
     }
-	@Override
-	protected void onResume() {
-        super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mOpenCvCallback);
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-		if (mMat != null) mMat.release();
-	}
-	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.process_image, menu);
-		return true;
-	}
 
 }

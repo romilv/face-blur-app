@@ -63,7 +63,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private int                    mDetectorType       = JAVA_DETECTOR;
     private String[]               mDetectorName;
 
-    private float                  mRelativeFaceSize   = 0.4f;
+    private float                  mRelativeFaceSize   = 0.35f;
     private int                    mAbsoluteFaceSize   = 0;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
@@ -259,14 +259,15 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 				}
 			});
         	
-//        	for (int i = 0; i < facesArray.length; i++) {
-//        		faceName = "Face" + i + ".png";
-//        		face = mRgba.submat(facesArray[i]);
-//        		Imgproc.GaussianBlur(face, face, new Size(95, 95), 0);
-//        		saveImage(face, faceName, false);
-//        	}
+        	// to blur faces
+        	for (int i = 0; i < facesArray.length; i++) {
+        		faceName = "Face" + i + ".png";
+        		face = mRgba.submat(facesArray[i]);
+        		Imgproc.GaussianBlur(face, face, new Size(95, 95), 0);
+        		saveImage(face, faceName, false);
+        	}
         	
-        	Mat mCloneRgba = mRgba.clone();
+//        	Mat mCloneRgba = mRgba.clone();
 //        	for (int i = 0; i < mCloneRgba.rows(); i ++) {
 //        		for (int j = 0; j < mCloneRgba.cols(); j++) {
 //        			double[] rgbArray = mCloneRgba.get(i, j);
@@ -278,6 +279,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 //        			mCloneRgba.put(i, j, rgbArray);
 //        		}
 //        	}
+        	
 //        	Mat mMat = new Mat();
 //        	List<Mat> rgbMatList = new ArrayList<Mat>();
 //        	Core.split(mCloneRgba, rgbMatList);
@@ -286,10 +288,17 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 //        	Log.d("channels::mRgba", Integer.toString(mRgba.channels()));
 //        	Log.d("channels::mGray", Integer.toString(mGray.channels()));
 //        	Log.d("channels::mMat", Integer.toString(mMat.channels()));
-    		saveImage(mRgba, "picture2.png", true);
+        	
+        	// only need to process if saving the image
+        	processMat(mRgba);
+    		saveImage(mRgba, "picture3.png", true);
         }
 
         return mRgba;        
+    }
+    
+    protected void processMat(Mat mat) {
+    	Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2RGB);
     }
     
     // Mat to be saved
