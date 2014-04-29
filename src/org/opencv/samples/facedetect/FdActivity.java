@@ -65,6 +65,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private float                  mRelativeFaceSize   = 0.35f;
     private int                    mAbsoluteFaceSize   = 0;
+    
+    private Rect[] facesArray;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
     
@@ -235,7 +237,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             Log.e(TAG, "Detection method is not selected!");
         }
 
-        Rect[] facesArray = faces.toArray();
+        facesArray = faces.toArray();
         for (int i = 0; i < facesArray.length; i++) {
             Core.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
         }
