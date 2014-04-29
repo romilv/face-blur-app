@@ -267,7 +267,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         		saveImage(face, faceName, false);
         	}
         	
-//        	Mat mCloneRgba = mRgba.clone();
+//        	Mat mCloneRgba = mRgba.clone();  
 //        	for (int i = 0; i < mCloneRgba.rows(); i ++) {
 //        		for (int j = 0; j < mCloneRgba.cols(); j++) {
 //        			double[] rgbArray = mCloneRgba.get(i, j);
