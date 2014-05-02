@@ -60,12 +60,8 @@
         <activity
             android:name="org.opencv.samples.facedetect.MainActivity"
             android:label="@string/app_name" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
+        
         <activity
             android:name="org.opencv.samples.facedetect.DisplayImageActivity"
             android:label="@string/app_name"
@@ -75,19 +71,33 @@
             android:name="org.opencv.samples.facedetect.SensorActivity"
             android:label="@string/title_activity_sensor"
             android:screenOrientation="unspecified" >
+<!--             <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter> -->
         </activity>
         <activity
             android:name="org.opencv.samples.facedetect.CaptureImageActivity"
             android:label="@string/title_activity_capture_image" >
+<!--             <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter> -->
+        </activity>
+        <activity
+            android:name="org.opencv.samples.facedetect.ProcessImageActivity"
+            android:label="@string/title_activity_process_image" >
+        </activity>
+        <activity
+            android:name="org.opencv.samples.facedetect.OrientationSensorActivity"
+            android:label="@string/title_activity_orientation_sensor" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
-            android:name="org.opencv.samples.facedetect.ProcessImageActivity"
-            android:label="@string/title_activity_process_image" >
         </activity>
     </application>
 

@@ -1,0 +1,42 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+
+    tools:context=".OrientationSensorActivity" >
+
+    <Button 
+        android:id="@+id/btn_orientation_sensor"
+        android:text="get azimuth and pitch info"  
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    
+    <TextView 
+        android:id="@+id/azimuth_z_0_label1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" 
+        android:text="azimuth" />
+    
+    <TextView 
+        android:id="@+id/tv_azimuth"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    
+    <TextView 
+        android:id="@+id/tv_compass"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+        
+    <TextView 
+        android:id="@+id/pitch_x_1_label1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+        
+    <TextView 
+        android:id="@+id/tv_pitch"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="pitch" />
+
+</LinearLayout>

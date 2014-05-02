@@ -35,7 +35,7 @@ public class SensorActivity extends Activity implements SensorEventListener {
 	private TextView mOrientZAzimuth;
 	
 	private int mRoll2, mPitch1, mAzimuth0;
-	
+		
 	// Activity simply reads recordings of Accelerometer and Magnetometer for purpose of mapping readings
 	// to compass directions
 	
@@ -49,7 +49,6 @@ public class SensorActivity extends Activity implements SensorEventListener {
 		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 		mRotationVector = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-		
 		
 		mOrientXPitch = (TextView) findViewById(R.id.pitch_x_1_value);
 		mOrientYRoll = (TextView) findViewById(R.id.roll_y_2_value);

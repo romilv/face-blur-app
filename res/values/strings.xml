@@ -18,5 +18,7 @@
     <string name="title_activity_sensor">SensorActivity</string>
     <string name="title_activity_capture_image">CaptureImageActivity</string>
     <string name="title_activity_process_image">ProcessImageActivity</string>
+    <string name="title_activity_orientation_sensor">OrientationSensorActivity</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>

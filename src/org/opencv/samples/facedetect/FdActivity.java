@@ -296,7 +296,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     		saveImage(mRgba, "picture3.png", true);
         }
 
-        return mRgba;        
+        return mRgba;
     }
     
     protected void processMat(Mat mat) {
