@@ -5,7 +5,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
@@ -25,11 +27,17 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.samples.facedetect.R;
 
 import android.app.Activity;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -39,11 +47,11 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-public class FdActivity extends Activity implements CvCameraViewListener2 {
+public class FdActivity extends Activity implements CvCameraViewListener2, SensorEventListener {
 	
 	private static int counter = 0;
 
-//    private static final String    TAG                 = "OCVSample::Activity";
+    private static final String TAG = "PhotoPrivacy::FDActivity";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
     public static final int        JAVA_DETECTOR       = 0;
     public static final int        NATIVE_DETECTOR     = 1;
@@ -70,12 +78,26 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private CameraBridgeViewBase   mOpenCvCameraView;
     
-    private boolean mFlagTakePic;
-//    private Button mButtonTakePic;
+    private boolean mFlagTakePicture;
     private LinearLayout mLinearLayout;
     
-    private static final String TAG = "PhotoPrivacy::FDActivity";
+    // sensor operations to obtain direction phone pointing in when image is taken
+    private OrientationSensor mOrientationSensor;
+    private SensorManager mSensorManager;
+    
+	private int[] mAzimuthHistoryByCount;
+	private boolean mHistoryOverflow;
+	private int mCurrentCounter;	
+	private int mSensorCallCount;
+	private Float mAzimuth;
+	private String mCompassDirection;
 
+	private final float RADIANS_TO_DEGREE = 57.2957795f;
+	private final int NW = 1, NE = 2, SW = 3, SE = 4;
+	private final int AZIMUTH_HISTORY_LENGTH = 60;
+	private final int HISTORY_TO_CONSIDER = 40;
+
+	// BaseLoader from OpenCV
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -145,42 +167,34 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.face_detect_surface_view);
 
-        mLinearLayout = (LinearLayout) findViewById(R.id.fd_activity_lin_layout);
+        // openCV
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
         
-        mFlagTakePic = false;
+        // sensor
+        mSensorManager = (SensorManager) getSystemService(Service.SENSOR_SERVICE);
+        mOrientationSensor = new OrientationSensor(mSensorManager, FdActivity.this);
         
+		mAzimuthHistoryByCount = new int[AZIMUTH_HISTORY_LENGTH];
+		mHistoryOverflow = false;
+		mCurrentCounter = 0;
+		mSensorCallCount = 0;
+        
+        // taking picture
+        mFlagTakePicture = false;
+        mLinearLayout = (LinearLayout) findViewById(R.id.fd_activity_lin_layout);
         mLinearLayout.setOnTouchListener(new OnTouchListener() {
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				// if user touches screen, set flag to indicate that current frame should be saved as image
 				if (event.getAction() == MotionEvent.ACTION_UP) {
 					counter += 1;
-					mFlagTakePic = true;
+					mFlagTakePicture = true;
 				}
 				return true;
 			}
 		});
                 
-        // Design choice
-        // Code in case button is used instead of simply touching the screen to capture image
-        
-//        mButtonTakePic = (Button) findViewById(R.id.btn_take_pic);
-//        mButtonTakePic.setOnClickListener(new OnClickListener() {
-//			@Override
-//			public void onClick(View v) {
-//				mFlagTakePic = true;
-//			}
-//		});
-    }
-
-    @Override
-    public void onPause()
-    {
-        super.onPause();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
     }
 
     @Override
@@ -189,8 +203,25 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
         
+        // load sensor to get orientation of phone when picture is taken
+		int count = mOrientationSensor.Register(FdActivity.this, SensorManager.SENSOR_DELAY_UI);
+		if (count != 2) {
+			Toast.makeText(getApplicationContext(), "Sensors required not available on this device", Toast.LENGTH_SHORT).show();
+			mOrientationSensor.Unregister();
+			mOrientationSensor = null;
+		}
+		
         // indicate to user how to capture image
         Toast.makeText(getApplicationContext(), "TOUCH SCREEN TO TAKE A PICTURE", Toast.LENGTH_SHORT).show();
+    }
+    
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        if (mOpenCvCameraView != null)
+            mOpenCvCameraView.disableView();
+        mOrientationSensor.Unregister();
     }
 
     public void onDestroy() {
@@ -246,18 +277,25 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         String faceName;
         
         // if take a picture flag is set, then save image
-        if(mFlagTakePic) {
-        	mFlagTakePic = false;
-        	String s = "";
+        if(mFlagTakePicture) {
+        	mFlagTakePicture = false;
+        	
+        	if (mOrientationSensor != null)
+        		computePhoneDirection();
+        	
+        	String s;
+        	StringBuilder sb = new StringBuilder();
         	
 			for(int i = 0; i < facesArray.length; i++) {
-        		s = s + " " + i + " " + facesArray[i].x + ", " + facesArray[i].y + ", tl " + facesArray[i].tl();
+        		sb.append(i + " " + facesArray[i].x + ", " + facesArray[i].y + ", tl " + facesArray[i].tl() + " ");
 			}
+			s = sb.toString();
 			
         	FdActivity.this.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
 					Toast.makeText(getApplicationContext(), "Image captured", Toast.LENGTH_SHORT).show();
+		        	Toast.makeText(getApplicationContext(), mCompassDirection, Toast.LENGTH_LONG).show();
 				}
 			});
         	
@@ -268,28 +306,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         		Imgproc.GaussianBlur(face, face, new Size(95, 95), 0);
         		saveImage(face, faceName, false);
         	}
-        	
-//        	Mat mCloneRgba = mRgba.clone();  
-//        	for (int i = 0; i < mCloneRgba.rows(); i ++) {
-//        		for (int j = 0; j < mCloneRgba.cols(); j++) {
-//        			double[] rgbArray = mCloneRgba.get(i, j);
-//        			double[] grayArray = mGray.get(i, j);
-////        			Log.i("rowcol", rgbArray.length + " " + grayArray.length);
-////        			for (int k = 0; k < rgbArray.length; k++) {
-////        				rgbArray[k] += grayArray[k];
-////        			}
-//        			mCloneRgba.put(i, j, rgbArray);
-//        		}
-//        	}
-        	
-//        	Mat mMat = new Mat();
-//        	List<Mat> rgbMatList = new ArrayList<Mat>();
-//        	Core.split(mCloneRgba, rgbMatList);
-//        	rgbMatList.add(mGray);
-//        	Core.merge(rgbMatList, mMat);
-//        	Log.d("channels::mRgba", Integer.toString(mRgba.channels()));
-//        	Log.d("channels::mGray", Integer.toString(mGray.channels()));
-//        	Log.d("channels::mMat", Integer.toString(mMat.channels()));
         	
         	// only need to process if saving the image
         	processMat(mRgba);
@@ -329,6 +345,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 				public void run() {
 					Intent intent = new Intent(getApplicationContext(), DisplayImageActivity.class);
 					intent.putExtra("PICTURE_NAME", name);
+					intent.putExtra("PHONE_DIRECTION", mCompassDirection);
 					startActivity(intent);
 				}
 			});
@@ -383,4 +400,113 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             }
         }
     }
+
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	// on SensorChanged called every time onSensorChange called in OrientationSensor.java
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+		mSensorCallCount++;
+		
+		// if AZIMUTH_HISTORY_LENGTH of data points have been added
+		if (mSensorCallCount == AZIMUTH_HISTORY_LENGTH) {
+			mHistoryOverflow = true;
+		}
+				
+		mAzimuth = mOrientationSensor.m_azimuth_radians * RADIANS_TO_DEGREE;		
+		mCurrentCounter = mSensorCallCount % AZIMUTH_HISTORY_LENGTH;
+		
+		// map value of azimuth to compass direction
+		if (mAzimuth < 0 && mAzimuth > - 90)
+			mAzimuthHistoryByCount[mCurrentCounter] = NW;
+		else if (mAzimuth > 0 && mAzimuth < 90)
+			mAzimuthHistoryByCount[mCurrentCounter] = NE;
+		else if (mAzimuth > 90 && mAzimuth < 180)
+			mAzimuthHistoryByCount[mCurrentCounter] = SE;
+		else
+			mAzimuthHistoryByCount[mCurrentCounter] = SW;
+		
+	}
+
+	// when request to take a picture is sent, we go through recent history of azimuth directions
+	// and obtain its average to reliably determine direction phone was facing in when picture was taken
+	protected void computePhoneDirection() {
+		
+		if (mOrientationSensor.m_OrientationOK) {
+			mAzimuth = mOrientationSensor.m_azimuth_radians;
+			
+			Map<Integer, Integer> directionMap = new HashMap<Integer, Integer>();
+			directionMap.put(NW, 0);
+			directionMap.put(NE, 0);
+			directionMap.put(SW, 0);
+			directionMap.put(SE, 0);
+
+			int key;
+			// if AzimuthHistory has less than HISTORY_TO_CONSIDER elements to consider
+			if (!mHistoryOverflow) {
+				for (int i = 0; i < mCurrentCounter; i++) {
+					key = mAzimuthHistoryByCount[i];
+					directionMap.put(key, directionMap.get(key)+1);
+				}				
+			}
+			
+			else {
+				
+				// if counter is less than HISTORY_TO_CONSIDER, then get count from 0 to counter and then
+				// from AZIMUTH_HISTORY_LENGTH minus difference left to end of AZIMUTH_HISTORY_LENGTH array
+				if (HISTORY_TO_CONSIDER > mCurrentCounter) {
+					
+					int difference = HISTORY_TO_CONSIDER - mCurrentCounter;
+					
+					for (int i = 0; i < mCurrentCounter; i++) {
+						key = mAzimuthHistoryByCount[i];
+						directionMap.put(key, directionMap.get(key)+1);
+					}
+					
+					for (int i = AZIMUTH_HISTORY_LENGTH - difference; i < AZIMUTH_HISTORY_LENGTH; i++) {
+						key = mAzimuthHistoryByCount[i];
+						directionMap.put(key, directionMap.get(key)+1);
+					}					
+				} // end if
+				
+				// else if counter is greater than or equal to HISTORY_TO_CONSIDER, simply count from 
+				// 0 to HISTORY_TO_CONSIDER
+				else if (HISTORY_TO_CONSIDER <= mCurrentCounter) {
+					for (int i = 0; i < HISTORY_TO_CONSIDER; i++) {
+						key = mAzimuthHistoryByCount[i];
+						directionMap.put(key, directionMap.get(key)+1);
+					}					
+				}
+			}
+			
+			int countNW, countNE, countSW, countSE;
+			countNW = directionMap.get(NW);
+			countNE = directionMap.get(NE);
+			countSE = directionMap.get(SE);
+			countSW = directionMap.get(SW);
+			
+			// find direction with highest count
+			int direction = countNW > countNE ? NW : NE;
+			int directionCount = countNW > countNE ? countNW : countNE;
+			direction = countSW > directionCount ? SW : direction;
+			directionCount = countSW > directionCount ? countSW : directionCount;
+			direction = countSE > directionCount ? SE : direction;
+			directionCount = countSE > directionCount ? countSE : directionCount; 
+			
+			// update mCompassDirection
+			if (direction == NW) mCompassDirection = "North-West";
+			else if (direction == NE) mCompassDirection = "North-East";							
+			else if (direction == SE) mCompassDirection = "South-East";
+			else if (direction == SW) mCompassDirection = "South-West";
+			
+			directionMap = null;
+
+		}		
+		else
+			mCompassDirection = null;
+	}
 }
