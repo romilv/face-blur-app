@@ -46,6 +46,9 @@ public class ProcessImageActivity extends Activity {
     private int                    mAbsoluteFaceSize   = 0;
 
 
+    private Bitmap imageToShow;
+    private Bitmap rotatedBitmap;
+    
 	private static final boolean DEBUG = true;
 	private Mat mMat;
 	private File mCascadeFile;
@@ -128,38 +131,9 @@ public class ProcessImageActivity extends Activity {
 	protected void loadImage() {
 		
 		Intent intent = getIntent();
-//		intent.getStringExtra(name);
-
-//		mFilePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-		String filename = intent.getStringExtra("filename");
 		filepath = intent.getStringExtra("filepath");
-		
-		// stub for file.getAbsolutePath();
-//		String path = "storage/emulated/0/DCIM/Camera/20140427_014152.jpg";
-
-//		File file = new File(mFilePath, filename);
-//		Log.i(TAG, "filePath " + filePath);
-//		Log.i(TAG, "filepath " + filepath);
-//		Log.i(TAG, "filename " + filename);
-//		Log.i(TAG, "file " + file);
-
 
 		mMat = Highgui.imread(filepath);
-		
-
-				
-		// http://stackoverflow.com/questions/13727899/android-opencv-highgui-imread-wrong-color
-		if (DEBUG) {
-//			Log.i(TAG, "filename " + file.getAbsolutePath());
-//			Log.i(TAG, "channels " + mMat.channels());
-//			Log.i(TAG, "cols " + mMat.cols());
-//			Log.i(TAG, "rows " + mMat.rows());
-//			Log.i(TAG, "dims " + mMat.dims());
-//			Log.i(TAG, "empty" + mMat.empty());
-//			Log.i(TAG, "type" + mMat.type());
-//			
-//			Log.i(TAG, "size" + mMat.size());
-		}
 
 		loadToImageView(mMat);
 		if (mMat != null && !mMat.empty()) {
@@ -223,7 +197,11 @@ public class ProcessImageActivity extends Activity {
 		// restore color of mMat before display
 		Imgproc.cvtColor(m, tempMat, Imgproc.COLOR_BGR2RGB);
 		
-		Bitmap imageToShow = Bitmap.createBitmap(tempMat.cols(), tempMat.rows(), Bitmap.Config.ARGB_8888);
+		if (imageToShow != null) {
+			imageToShow.recycle();
+		}
+		
+		imageToShow = Bitmap.createBitmap(tempMat.cols(), tempMat.rows(), Bitmap.Config.ARGB_8888);
 		
 		Utils.matToBitmap(tempMat, imageToShow);
 		
@@ -242,13 +220,18 @@ public class ProcessImageActivity extends Activity {
 				matrix.postRotate(0);
 			
 			Toast.makeText(getApplicationContext(), "orientation" + orientation, Toast.LENGTH_SHORT).show();
-			Bitmap rotatedBitmap = Bitmap.createBitmap(imageToShow, 0, 0, imageToShow.getWidth(), imageToShow.getHeight(), matrix, true);
+			if (rotatedBitmap != null) {
+				rotatedBitmap.recycle();
+			}
+			rotatedBitmap = Bitmap.createBitmap(imageToShow, 0, 0, imageToShow.getWidth(), imageToShow.getHeight(), matrix, true);
 			mImageView.setImageBitmap(rotatedBitmap);
 		
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
 //		mImageView.setImageBitmap(imageToShow);
+		imageToShow = null;
+		rotatedBitmap = null;
 
 	}
 	

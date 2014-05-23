@@ -531,16 +531,21 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 	}
 	
 	protected void getLatestLocationUpdate() {
+		/*
+		 * 
+		 */
+		
 		Intent mLocationServiceIntent = new Intent(this, LocationService.class);
 		startService(mLocationServiceIntent);
 		stopService(mLocationServiceIntent);
 	}
 	
-	/*
-	 * Return url of the server where http GET request can be made to get list of nearby users
-	 * SERVER_URL controls whether complete list of users should be returned (2) or only users in vicinity (1)
-	 */
+
 	protected String buildServerUrl() {
+		/*
+		 * Return url of the server where http GET request can be made to get list of nearby users
+		 * SERVER_URL controls whether complete list of users should be returned (2) or only users in vicinity (1)
+		 */
 		
 		String serverUrl = "";
 		
@@ -567,10 +572,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 		return serverUrl;
 	}
 	
-	/*
-	 * AsyncTask to get user list via network
-	 */
+
 	private class HttpGetNearbyUserList extends AsyncTask<String, Void, JSONArray> {
+		/*
+		 * AsyncTask to get user list via network
+		 */
+		
 		private HttpClient httpClient;
 		private HttpResponse httpResponse;
 		JSONArray jsonArray;
@@ -607,6 +614,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 		}
 		
 		protected void onPostExecute(JSONArray jArray) { 
+			/*
+			 * runBlurImageAfterOnPostExecute() run from within this method to prevent race conditions
+			 */
 			if (jArray != null)
 				numberOfUsers = jArray.length();
 			else
