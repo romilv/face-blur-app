@@ -50,9 +50,7 @@ public class DisplayImageActivity extends Activity {
     	
     	// modification - reading using opencv and manipulating image accordingly
     	if (mFile.exists()) {
-    		mMat = Highgui.imread(mFile.toString());
-//    		if (mMat.)
-    		
+    		mMat = Highgui.imread(mFile.toString());    		
     	}
 		
 	}

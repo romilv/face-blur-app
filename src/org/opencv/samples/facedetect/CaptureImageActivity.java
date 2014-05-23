@@ -81,7 +81,11 @@ public class CaptureImageActivity extends Activity implements View.OnClickListen
 	    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
     	startActivityForResult(cameraIntent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
 	}
-
+	
+	// ***********************
+	// moved to utility
+	// ***********************
+	
 //	private String createImageFileName() {
 //		
 //		// Create an image file name
@@ -212,7 +216,7 @@ public class CaptureImageActivity extends Activity implements View.OnClickListen
 	    // Create the storage directory if it does not exist
 	    if (! mediaStorageDir.exists()){
 	        if (! mediaStorageDir.mkdirs()){
-	            Log.d("MyCameraApp", "failed to create directory");
+	            Log.d("FaceBlurApp", "failed to create directory");
 	            return null;
 	        }
 	    }

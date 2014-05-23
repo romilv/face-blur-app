@@ -1,26 +1,21 @@
 package org.opencv.samples.facedetect;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.protocol.HttpContext;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
@@ -31,10 +26,7 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.objdetect.CascadeClassifier;
-import org.opencv.samples.facedetect.R;
 
 import android.app.Activity;
 import android.app.Service;
@@ -48,7 +40,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.util.SparseIntArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -60,7 +51,10 @@ import android.widget.Toast;
 
 public class FdActivity extends Activity implements CvCameraViewListener2, SensorEventListener {
 	
-	private static int counter = 0;
+	private static final int SERVER_URL = 2; // 1 to send only users in vicinity, 2 to send list of all users 
+	private static int counter;
+	
+	private int numberOfUsers = 0;
 
     private static final String TAG = "PhotoPrivacy::FDActivity";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
@@ -82,7 +76,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
     private int                    mDetectorType       = JAVA_DETECTOR;
     private String[]               mDetectorName;
 
-    private float                  mRelativeFaceSize   = 0.35f;
+    private float                  mRelativeFaceSize   = 0.2f;
     private int                    mAbsoluteFaceSize   = 0;
     
     private Rect[] facesArray;
@@ -180,6 +174,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
         
         // Make sure you have most accurate coordinates of user when she goes to capture an image
         getLatestLocationUpdate();
+        
+        counter = 0;
 
         // openCV
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
@@ -288,50 +284,58 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
             Core.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
         }
         
-        Mat face;
-        String faceName;
-        
         // if take a picture flag is set, then save image
         if(mFlagTakePicture) {
         	mFlagTakePicture = false;
         	
         	if (mOrientationSensor != null)
         		computePhoneDirection();
-        	
-        	String s;
-        	StringBuilder sb = new StringBuilder();
-        	
-			for(int i = 0; i < facesArray.length; i++) {
-        		sb.append(i + " " + facesArray[i].x + ", " + facesArray[i].y + ", tl " + facesArray[i].tl() + " ");
-			}
-			s = sb.toString();
 			
 			String serverUrl = buildServerUrl();
 			
-			new HttpPostData().execute(serverUrl);
-			
-        	FdActivity.this.runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					Toast.makeText(getApplicationContext(), "Image captured", Toast.LENGTH_SHORT).show();
-		        	Toast.makeText(getApplicationContext(), mCompassDirection, Toast.LENGTH_LONG).show();
-				}
-			});
+			new HttpGetNearbyUserList().execute(serverUrl);
         	
-        	// to blur faces
-        	for (int i = 0; i < facesArray.length; i++) {
-        		faceName = "Face" + i + ".png";
-        		face = mRgba.submat(facesArray[i]);
-        		Imgproc.GaussianBlur(face, face, new Size(95, 95), 0);
-        		saveImage(face, faceName, false);
-        	}
-        	
-        	// only need to process if saving the image
-        	processMat(mRgba);
-    		saveImage(mRgba, "picture3.png", true);
+			// runBlurImageAfterOnPostExecute()
         }
 
         return mRgba;
+    }
+    
+    protected void runBlurImageAfterOnPostExecute() {
+    	
+    	// to blur faces
+    	int facesArrayLength = facesArray.length;
+    	if (facesArrayLength > numberOfUsers) {
+    		facesArrayLength = numberOfUsers;
+    	}
+    	
+    	Log.d("racecondition", numberOfUsers + " users in FdActivity");
+    	FdActivity.this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				Toast.makeText(getApplicationContext(), "Image captured", Toast.LENGTH_SHORT).show();
+	        	Toast.makeText(getApplicationContext(), mCompassDirection, Toast.LENGTH_SHORT).show();
+	        	Toast.makeText(getApplicationContext(), numberOfUsers + " users found in vincinity", Toast.LENGTH_SHORT).show();
+			}
+		});
+    	
+        Mat face;
+        String faceName;
+        
+    	for (int i = 0; i < facesArrayLength; i++) {
+    		faceName = "Face" + i + ".png";
+    		face = mRgba.submat(facesArray[i]);
+    		Imgproc.GaussianBlur(face, face, new Size(95, 95), 0);
+    		saveImage(face, faceName, false);
+    	}
+    	
+    	// only need to process if saving the image
+    	processMat(mRgba);
+		saveImage(mRgba, "picture3.png", true);
+		
+//    	String fileName = Utility.createImageFileName();
+//    	saveImage(mRgba, fileName, true);
+    	
     }
     
     protected void processMat(Mat mat) {
@@ -532,45 +536,56 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 		stopService(mLocationServiceIntent);
 	}
 	
+	/*
+	 * Return url of the server where http GET request can be made to get list of nearby users
+	 * SERVER_URL controls whether complete list of users should be returned (2) or only users in vicinity (1)
+	 */
 	protected String buildServerUrl() {
 		
-		Log.d("location lat", Double.toString(Utility.location.getLatitude()));
-//		String serverUrl = Utility.getHostUrl();
-		String serverUrl = Utility.getUrlNotify();
-		String userId = Utility.getUserId();
-//		String userId = "2";
-		String dir = mCompassDirection;
-//		String dir = "NW";
-		String latitude = Double.toString(Utility.location.getLatitude());
-//		String latitude = "37";
-		String longitude = Double.toString(Utility.location.getLongitude());
-		StringBuilder sb = new StringBuilder(serverUrl);
-		sb.append(userId + "/");
-		sb.append(latitude + "/");
-		sb.append(longitude + "/");
-		sb.append(dir);
-		serverUrl = sb.toString();
+		String serverUrl = "";
+		
+		switch(SERVER_URL) {
+		case 1: 
+			serverUrl = Utility.getUrlNotify();
+			String userId = Utility.getUserId();
+			String dir = mCompassDirection;
+			String latitude = Double.toString(Utility.location.getLatitude());
+			String longitude = Double.toString(Utility.location.getLongitude());
+			StringBuilder sb = new StringBuilder(serverUrl);
+			sb.append(userId + "/");
+			sb.append(latitude + "/");
+			sb.append(longitude + "/");
+			sb.append(dir);
+			serverUrl = sb.toString();
+			break;
+			
+		case 2:
+			serverUrl = Utility.getHostUrl();
+			break;
+		}
+
 		return serverUrl;
 	}
 	
-	private class HttpPostData extends AsyncTask<String, Void, JSONArray> {
+	/*
+	 * AsyncTask to get user list via network
+	 */
+	private class HttpGetNearbyUserList extends AsyncTask<String, Void, JSONArray> {
 		private HttpClient httpClient;
-		private HttpContext httpContext;
-		private HttpPost httpPost;
-		private HttpGet httpGet;
 		private HttpResponse httpResponse;
 		JSONArray jsonArray;
 		
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
-			// can call UI Elements here
 		}
 		
 		@Override
 		protected JSONArray doInBackground(String... params) {
+			/*
+			 * 
+			 */
 			InputStream content = null;
-			String url = params[0];
 			String result = "";
 			jsonArray = null;
 			
@@ -578,70 +593,28 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 				httpClient = new DefaultHttpClient();
 				httpResponse = httpClient.execute(new HttpGet(params[0]));
 				content = httpResponse.getEntity().getContent();
-				result = convertStreamToString(content);
+				result = Utility.convertStreamToString(content);
 				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			
-			Log.d("http", result);
-
-			if (result.trim().equalsIgnoreCase("no user found")) {
-				Log.d("http", "no user found 1");
-			} else { 
-				jsonArray = convertStringToJSON(result);
-				Log.d("http", "user found 2");
-			}
-			return jsonArray;
-		}
-		
-		protected void onPostExecute(Void unused) {
-            // NOTE: You can call UI Element here.
-        }
-		
-		private JSONArray convertStringToJSON(String input) {
-			try {
-				JSONArray jsonArray = new JSONArray(input);
-				for (int i = 0; i < jsonArray.length(); i++) {
-					JSONObject jsonObject = jsonArray.getJSONObject(i);
-					Log.d(Integer.toString(i), jsonObject.toString());
-
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
+			if(!result.trim().equalsIgnoreCase("no user found")) {
+				jsonArray = Utility.convertStringToJSON(result);
 			}
 			
 			return jsonArray;
 		}
 		
-		private String convertStreamToString(InputStream is) {
-	        /*
-	         * To convert the InputStream to String we use the BufferedReader.readLine()
-	         * method. We iterate until the BufferedReader return null which means
-	         * there's no more data to read. Each line will appended to a StringBuilder
-	         * and returned as String.
-	         */
-	        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-	        StringBuilder sb = new StringBuilder();
-
-	        String line = null;
-	        try {
-	            while ((line = reader.readLine()) != null) {
-	                sb.append(line + "\n");
-	            }
-	        } catch (IOException e) {
-	            e.printStackTrace();
-	        } finally {
-	            try {
-	                is.close();
-	            } catch (IOException e) {
-	                e.printStackTrace();
-	            }
-	        }
-	        return sb.toString();
-	    }
+		protected void onPostExecute(JSONArray jArray) { 
+			if (jArray != null)
+				numberOfUsers = jArray.length();
+			else
+				numberOfUsers = 0;
+			
+			Log.d("racecondition", numberOfUsers + " users in onPostExecute");
+			
+			runBlurImageAfterOnPostExecute();
+		}
 	} // end inner class
-	
-	
 }

@@ -1,8 +1,16 @@
  package org.opencv.samples.facedetect;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.location.Location;
@@ -20,6 +28,9 @@ public class Utility {
 	private static final String URL_GET_CLOSEST_USERS = "http://rocky-citadel-2836.herokuapp.com/user/";
 	private static String uniqueUserId;
 	private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
+	
+	private static final String JPEG_FILE_PREFIX = "IMG_";
+	private static final String JPEG_FILE_SUFFIX = ".jpg";
 	
 	public static String getHostUrl() {
 		return URL_HOST;
@@ -66,4 +77,59 @@ public class Utility {
 			return true;
 		return false;
 	}
+	
+	public static String createImageFileName() {
+		// Create an image file name
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+		String imageFileName = JPEG_FILE_PREFIX + timeStamp + "_" + JPEG_FILE_SUFFIX;
+		return imageFileName;
+	}
+	
+
+	public static JSONArray convertStringToJSON(String input) {
+		/*
+		 * 
+		 */
+		JSONArray tempJsonArray = null;
+		try {
+			tempJsonArray = new JSONArray(input);
+			for (int i = 0; i < tempJsonArray.length(); i++) {
+				JSONObject jsonObject = tempJsonArray.getJSONObject(i);
+				Log.d(Integer.toString(i), jsonObject.toString());
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		
+		return tempJsonArray;
+	}
+	
+	public static String convertStreamToString(InputStream is) {
+        /*
+         * To convert the InputStream to String we use the BufferedReader.readLine()
+         * method. We iterate until the BufferedReader return null which means
+         * there's no more data to read. Each line will appended to a StringBuilder
+         * and returned as String.
+         */
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+
+        String line = null;
+        try {
+            while ((line = reader.readLine()) != null) {
+                sb.append(line + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return sb.toString();
+    }
 }

@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnClickListener {
 	
@@ -58,16 +57,16 @@ public class MainActivity extends Activity implements OnClickListener {
 			
 		case R.id.btn_send_location:
 			
-			mSendCoordinates = !mSendCoordinates; // static value, shared across intents
+			// static value, shared across instances
+			mSendCoordinates = !mSendCoordinates;
 			
-			if (mLocationServiceIntent == null)
+			if (mLocationServiceIntent == null) {
 				mLocationServiceIntent = new Intent(this, LocationService.class);
+			}
 			
-			if (mSendCoordinates) 
+			if (mSendCoordinates) {
 				startService(mLocationServiceIntent);
-			
-			else { 
-//				Toast.makeText(getApplicationContext(), "stop service called", Toast.LENGTH_SHORT).show();
+			} else { 
 				stopService(mLocationServiceIntent);	
 			}
 			break;

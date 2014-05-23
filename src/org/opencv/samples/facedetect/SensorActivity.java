@@ -11,7 +11,11 @@ import android.widget.TextView;
 
 public class SensorActivity extends Activity implements SensorEventListener {
 	
-	private static final String TAG = "SENSOR_ACTIVITY";
+	/*
+	 * TEST CODE
+	 * TO REMOVE
+	 */
+	
 	private SensorManager mSensorManager;
 	private Sensor mAccelerometer;
 	private Sensor mMagnetometer;

@@ -87,7 +87,7 @@ public class LocationService extends Service {
 			Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
 		}
 		
-		String result = "";
+		String result = null;
 		
 		if(Utility.isNetworkAvailable(getApplicationContext())) {
 
@@ -100,6 +100,11 @@ public class LocationService extends Service {
 		else {
 			Toast.makeText(getApplicationContext(), "KINDLY CONNECT TO INTERNET", Toast.LENGTH_SHORT).show();
 			mRunService = false;
+		}
+		
+		if (result != null) {
+			// JSON response from the server
+			// Parse it using Utility.convertStringToJSON
 		}
 	}
 	
@@ -151,7 +156,7 @@ public class LocationService extends Service {
 			return result;
 		}
 		
-		return "";
+		return null;
 	}
 	
 	private class MyLocationList implements LocationListener {
