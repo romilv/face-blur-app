@@ -26,12 +26,13 @@ public class DisplayImageActivity extends Activity {
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		setContentView(R.layout.activity_display_image);
+
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) 
 			mName = extras.getString("PICTURE_NAME");
 		
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_display_image);
 		
 		mImageView = (ImageView) findViewById(R.id.id_captured_img);
 

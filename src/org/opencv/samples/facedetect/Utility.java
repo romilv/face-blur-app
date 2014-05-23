@@ -2,8 +2,10 @@
 import java.util.UUID;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
@@ -11,11 +13,17 @@ import android.util.Log;
 public class Utility {
 	
 	private static final String TAG = "PhotoPrivacy::Utility";
-	// app's backend link
+	// app's back-end link
+	protected static Location location = null;
+	private static final String URL_HOST = "http://rocky-citadel-2836.herokuapp.com/";
 	private static final String URL_NOTIFY = "http://rocky-citadel-2836.herokuapp.com/user/";
 	private static final String URL_GET_CLOSEST_USERS = "http://rocky-citadel-2836.herokuapp.com/user/";
 	private static String uniqueUserId;
 	private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
+	
+	public static String getHostUrl() {
+		return URL_HOST;
+	}
 	
 	public static String getUserId() {
 		if (uniqueUserId == null)

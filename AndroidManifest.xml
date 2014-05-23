@@ -103,11 +103,24 @@
         <activity
             android:name="org.opencv.samples.facedetect.OrientationSensorActivity"
             android:label="@string/title_activity_orientation_sensor" >
-<!--             <intent-filter>
+
+            <!--
+                 <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter> -->
+            </intent-filter>
+            -->
+        </activity>
+        <activity
+            android:name="org.opencv.samples.facedetect.HttpPostActivity"
+            android:label="@string/title_activity_http_post" >
+            
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
     </application>
 

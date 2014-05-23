@@ -4,13 +4,38 @@
     android:layout_height="match_parent"
     tools:context=".CaptureImageActivity"
     android:orientation="vertical"
-    android:background="@color/background_color" >
+    android:background="@color/background_color"
+    android:weightSum="2" >
+    
+    <TextView 
+        android:text="Android Camera Version"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/blue" 
+        android:gravity="center"
+        android:fontFamily="sans-serif"
+        android:textStyle="bold"
+        android:textSize="30sp"
+        android:paddingTop="20dp"
+        android:paddingBottom="30dp"
+        android:layout_weight="1.5" />
     
     <Button 
+        android:layout_marginTop="40dp"
         android:id="@+id/btn_take_pic" 
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="15sp" 
+        android:text="take picture using Android's Native Camera"
+        android:layout_weight="0.25" />
+    
+    <Button 
+        android:id="@+id/btn_main_menu" 
+        android:layout_width="match_parent"
         android:layout_height="wrap_content" 
-        android:text="take picture"/>
+        android:textSize="15sp"
+        android:text="go back to main menu"
+        android:layout_weight="0.25" />
 
 
 </LinearLayout>

@@ -1,14 +1,24 @@
 package org.opencv.samples.facedetect;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.HttpContext;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
@@ -34,6 +44,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -166,6 +177,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.face_detect_surface_view);
+        
+        // Make sure you have most accurate coordinates of user when she goes to capture an image
+        getLatestLocationUpdate();
 
         // openCV
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
@@ -194,6 +208,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 				return true;
 			}
 		});
+        
                 
     }
 
@@ -212,7 +227,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 		}
 		
         // indicate to user how to capture image
-        Toast.makeText(getApplicationContext(), "TOUCH SCREEN TO TAKE A PICTURE", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "TOUCH SCREEN TO TAKE A PICTURE", Toast.LENGTH_LONG).show();
     }
     
     @Override
@@ -290,6 +305,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
         		sb.append(i + " " + facesArray[i].x + ", " + facesArray[i].y + ", tl " + facesArray[i].tl() + " ");
 			}
 			s = sb.toString();
+			
+			String serverUrl = buildServerUrl();
+			
+			new HttpPostData().execute(serverUrl);
 			
         	FdActivity.this.runOnUiThread(new Runnable() {
 				@Override
@@ -402,10 +421,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
     }
 
 	@Override
-	public void onAccuracyChanged(Sensor sensor, int accuracy) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {	}
 
 	// on SensorChanged called every time onSensorChange called in OrientationSensor.java
 	@Override
@@ -498,10 +514,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 			directionCount = countSE > directionCount ? countSE : directionCount; 
 			
 			// update mCompassDirection
-			if (direction == NW) mCompassDirection = "North-West";
-			else if (direction == NE) mCompassDirection = "North-East";							
-			else if (direction == SE) mCompassDirection = "South-East";
-			else if (direction == SW) mCompassDirection = "South-West";
+			if (direction == NW) mCompassDirection = "NW";
+			else if (direction == NE) mCompassDirection = "NE";							
+			else if (direction == SE) mCompassDirection = "SE";
+			else if (direction == SW) mCompassDirection = "SW";
 			
 			directionMap = null;
 
@@ -509,4 +525,123 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 		else
 			mCompassDirection = null;
 	}
+	
+	protected void getLatestLocationUpdate() {
+		Intent mLocationServiceIntent = new Intent(this, LocationService.class);
+		startService(mLocationServiceIntent);
+		stopService(mLocationServiceIntent);
+	}
+	
+	protected String buildServerUrl() {
+		
+		Log.d("location lat", Double.toString(Utility.location.getLatitude()));
+//		String serverUrl = Utility.getHostUrl();
+		String serverUrl = Utility.getUrlNotify();
+		String userId = Utility.getUserId();
+//		String userId = "2";
+		String dir = mCompassDirection;
+//		String dir = "NW";
+		String latitude = Double.toString(Utility.location.getLatitude());
+//		String latitude = "37";
+		String longitude = Double.toString(Utility.location.getLongitude());
+		StringBuilder sb = new StringBuilder(serverUrl);
+		sb.append(userId + "/");
+		sb.append(latitude + "/");
+		sb.append(longitude + "/");
+		sb.append(dir);
+		serverUrl = sb.toString();
+		return serverUrl;
+	}
+	
+	private class HttpPostData extends AsyncTask<String, Void, JSONArray> {
+		private HttpClient httpClient;
+		private HttpContext httpContext;
+		private HttpPost httpPost;
+		private HttpGet httpGet;
+		private HttpResponse httpResponse;
+		JSONArray jsonArray;
+		
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			// can call UI Elements here
+		}
+		
+		@Override
+		protected JSONArray doInBackground(String... params) {
+			InputStream content = null;
+			String url = params[0];
+			String result = "";
+			jsonArray = null;
+			
+			try {
+				httpClient = new DefaultHttpClient();
+				httpResponse = httpClient.execute(new HttpGet(params[0]));
+				content = httpResponse.getEntity().getContent();
+				result = convertStreamToString(content);
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			Log.d("http", result);
+
+			if (result.trim().equalsIgnoreCase("no user found")) {
+				Log.d("http", "no user found 1");
+			} else { 
+				jsonArray = convertStringToJSON(result);
+				Log.d("http", "user found 2");
+			}
+			return jsonArray;
+		}
+		
+		protected void onPostExecute(Void unused) {
+            // NOTE: You can call UI Element here.
+        }
+		
+		private JSONArray convertStringToJSON(String input) {
+			try {
+				JSONArray jsonArray = new JSONArray(input);
+				for (int i = 0; i < jsonArray.length(); i++) {
+					JSONObject jsonObject = jsonArray.getJSONObject(i);
+					Log.d(Integer.toString(i), jsonObject.toString());
+
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+			
+			return jsonArray;
+		}
+		
+		private String convertStreamToString(InputStream is) {
+	        /*
+	         * To convert the InputStream to String we use the BufferedReader.readLine()
+	         * method. We iterate until the BufferedReader return null which means
+	         * there's no more data to read. Each line will appended to a StringBuilder
+	         * and returned as String.
+	         */
+	        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+	        StringBuilder sb = new StringBuilder();
+
+	        String line = null;
+	        try {
+	            while ((line = reader.readLine()) != null) {
+	                sb.append(line + "\n");
+	            }
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        } finally {
+	            try {
+	                is.close();
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	            }
+	        }
+	        return sb.toString();
+	    }
+	} // end inner class
+	
+	
 }

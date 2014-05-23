@@ -42,6 +42,7 @@ public class LocationService extends Service {
 		mLocatiomManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 		mLocationListener = new MyLocationList();
 		location = mLocatiomManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		Utility.location = location;
 		updateWithNewLocation(location);
 		mLocatiomManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 0, mLocationListener);
 	}

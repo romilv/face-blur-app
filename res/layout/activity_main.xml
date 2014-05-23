@@ -9,7 +9,7 @@
     tools:context=".MainActivity" 
     android:orientation="vertical" 
 	android:background="@color/background_color"
-	android:weightSum="2.5" >
+	android:weightSum="2.75" >
 	
     <TextView 
         android:text="@string/app_name"
@@ -29,16 +29,27 @@
         android:text="Start/Stop sending GPS"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"        
+        android:textSize="15sp"        
+        android:padding="5sp"
+        
         android:layout_weight="0.25" />
 
     <Button 
-        android:id="@+id/btn_take_picture"
-        android:text="Take a picture"
-        android:textSize="20sp"
+        android:id="@+id/btn_take_picture_opencv"
+        android:text="Use OpenCV Camera"
+        android:textSize="15sp"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:padding="10sp"
+        android:padding="5sp"
+        android:layout_weight="0.25" />
+    
+    <Button 
+        android:id="@+id/btn_take_picture_android"
+        android:text="Use Android Camera"
+        android:textSize="15sp"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="5sp"
         android:layout_weight="0.25" />
 
 </LinearLayout>

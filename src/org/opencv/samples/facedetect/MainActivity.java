@@ -12,7 +12,8 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnClickListener {
 	
-	private Button mBtnTakePicture;
+	private Button mBtnTakePictureOpenCV;
+	private Button mBtnTakePictureAndroid;
 	private Button mBtnSendCoordinates;
 	private static boolean mSendCoordinates = false;
 	
@@ -30,10 +31,13 @@ public class MainActivity extends Activity implements OnClickListener {
 		// Set's unique user id for each device or loads id from previous session
 		Utility.setUniqueUserId(getApplicationContext());
 		
-		mBtnTakePicture = (Button) findViewById(R.id.btn_take_picture);
+		mBtnTakePictureOpenCV = (Button) findViewById(R.id.btn_take_picture_opencv);
+		mBtnTakePictureAndroid = (Button) findViewById(R.id.btn_take_picture_android);
+
 		mBtnSendCoordinates = (Button) findViewById(R.id.btn_send_location);
 		
-		mBtnTakePicture.setOnClickListener(this);
+		mBtnTakePictureAndroid.setOnClickListener(this);
+		mBtnTakePictureOpenCV.setOnClickListener(this);
 		mBtnSendCoordinates.setOnClickListener(this);
 		
 	}
@@ -42,9 +46,14 @@ public class MainActivity extends Activity implements OnClickListener {
 	public void onClick(View v) {
 		switch (v.getId()) {
 		
-		case R.id.btn_take_picture:
+		case R.id.btn_take_picture_opencv:
 			Intent intent1 = new Intent(this, FdActivity.class);
 			startActivity(intent1);
+			break;
+			
+		case R.id.btn_take_picture_android:
+			Intent intent2 = new Intent(this, CaptureImageActivity.class);
+			startActivity(intent2);
 			break;
 			
 		case R.id.btn_send_location:
