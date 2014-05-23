@@ -66,7 +66,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
         <activity
             android:name="org.opencv.samples.facedetect.DisplayImageActivity"
             android:label="@string/app_name"
@@ -76,20 +75,26 @@
             android:name="org.opencv.samples.facedetect.SensorActivity"
             android:label="@string/title_activity_sensor"
             android:screenOrientation="unspecified" >
-<!--             <intent-filter>
+
+            <!--
+                 <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter> -->
+            </intent-filter>
+            -->
         </activity>
         <activity
             android:name="org.opencv.samples.facedetect.CaptureImageActivity"
             android:label="@string/title_activity_capture_image" >
-<!--             <intent-filter>
+
+            <!--
+                 <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter> -->
+            </intent-filter>
+            -->
         </activity>
         <activity
             android:name="org.opencv.samples.facedetect.ProcessImageActivity"

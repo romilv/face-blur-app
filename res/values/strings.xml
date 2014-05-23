@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">OpenCV Photo Privacy</string>
+    <string name="app_name">Stanford University\nFaceblur App</string>
     <!-- <string name="app_name">OCV Face Detection</string> -->
     <!-- <string name="title_activity_main">MainActivity</string> -->
     <string name="action_settings">Settings</string>
 
     <!-- Color Schemes -->
-    <color name="background_color">#33B5E5</color>
+    <!-- <color name="background_color">#33B5E5</color> -->
+    <color name="background_color">#FFFFFF</color>
     <color name="white">#FFFFFF</color>
     <color name="red">#FF4444</color>
+    <color name="blue">#0099CC</color>
     <color name="light_blue">#33B5E5</color>
     <color name="yellow">#FFBB33</color>
+    <color name="DarkBlue">#00008B</color>
+    <color name="MediumBlue">#0000CD</color>
+    <color name="Navy">#000080</color>
+    <color name="Black">#000000</color>
+    <color name="MidnightBlue">#191970</color>
 
     <string name="title_activity_display_image">DisplayImageActivity</string>
     <string name="title_activity_compass">CompassActivity</string>
@@ -20,5 +27,6 @@
     <string name="title_activity_process_image">ProcessImageActivity</string>
     <string name="title_activity_orientation_sensor">OrientationSensorActivity</string>
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_location_parameters">LocationParametersActivity</string>
 
 </resources>

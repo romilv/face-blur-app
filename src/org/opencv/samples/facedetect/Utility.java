@@ -1,9 +1,11 @@
-package org.opencv.samples.facedetect;
+ package org.opencv.samples.facedetect;
 import java.util.UUID;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 
 public class Utility {
@@ -44,5 +46,16 @@ public class Utility {
 				editor.commit();
 			}
 		}
+		
+		Log.i(TAG, uniqueUserId);
+	}
+	
+	// check if network is accessible and settings are properly configured on device
+	public static boolean isNetworkAvailable(Context context) {
+		ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+		if (networkInfo != null && networkInfo.isConnected())
+			return true;
+		return false;
 	}
 }

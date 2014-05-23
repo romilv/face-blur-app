@@ -3,7 +3,8 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     tools:context=".ProcessImageActivity"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:background="@color/background_color" >
     
     <ImageView 
         android:id="@+id/img_view"

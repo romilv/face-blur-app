@@ -16,8 +16,6 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.StrictMode;
@@ -26,6 +24,7 @@ import android.widget.Toast;
 
 public class LocationService extends Service {
 	
+	private static final boolean DEBUG = false;
 	private int counter = 0;
 	private boolean mFirstTimeflag = true;
 	
@@ -46,6 +45,8 @@ public class LocationService extends Service {
 		updateWithNewLocation(location);
 		mLocatiomManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 0, mLocationListener);
 	}
+	
+	
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -59,6 +60,8 @@ public class LocationService extends Service {
 		mLocatiomManager = null;
 		mLocationListener = null;
 		location = null;
+		Toast.makeText(getApplicationContext(), "GPS STOPPED", Toast.LENGTH_SHORT).show();
+
 		super.onDestroy();
 	}
 	
@@ -69,23 +72,27 @@ public class LocationService extends Service {
 		if (!mRunService)
 			return;
 		
+		
 		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 		StrictMode.setThreadPolicy(policy);
 		
+		if (DEBUG) {
+			final double latitude = location.getLatitude();
+			final double longitude = location.getLongitude();
+			String str = counter + " " + " lat " + latitude + " lon " + longitude;
+			counter += 1;
+			
+			// when location is updated send the data
+			Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
+		}
+		
 		String result = "";
-		final double latitude = location.getLatitude();
-		final double longitude = location.getLongitude();
-		String str = counter + " " + " lat " + latitude + " lon " + longitude;
-		counter += 1;
 		
-		// when location is updated send the data
-		Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
-		
-		if(isNetworkAvailable()) {
+		if(Utility.isNetworkAvailable(getApplicationContext())) {
 
 			result = postData();
 			if (mFirstTimeflag) {
-//				mFirstTimeflag = false;
+				mFirstTimeflag = false;
 				Toast.makeText(getApplicationContext(), "GPS SENDING SUCCESSFULLY TO SERVER", Toast.LENGTH_SHORT).show();
 			}
 		}
@@ -95,14 +102,6 @@ public class LocationService extends Service {
 		}
 	}
 	
-	// check if network is accessible and settings are properly configured on device
-	private boolean isNetworkAvailable() {
-		ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-		if (networkInfo != null && networkInfo.isConnected())
-			return true;
-		return false;
-	}
 	
 	public static String postData() {
 		InputStream inputStream;
@@ -116,7 +115,7 @@ public class LocationService extends Service {
 			JSONObject jsonObject = new JSONObject();
 	
 			// build JSON object
-			jsonObject.accumulate("user", Utility.getUserId());
+			jsonObject.accumulate("id", Utility.getUserId());
 			jsonObject.accumulate("lat", location.getLatitude());
 			jsonObject.accumulate("lon", location.getLongitude());
 	
@@ -132,6 +131,11 @@ public class LocationService extends Service {
 			httpClient.getConnectionManager().shutdown();
 			inputStream = httpResponse.getEntity().getContent();
 			
+			if (DEBUG) {
+				Log.d("httpResponse", httpResponse.toString());
+				Log.d("inputStream", inputStream.toString());
+			}
+			
 			if (inputStream != null) 
 				result = inputStream.toString();
 			else
@@ -141,7 +145,7 @@ public class LocationService extends Service {
 			e.printStackTrace();
 			Log.d("LocationService", e.getLocalizedMessage());
 		}
-		
+				
 		if (result != null) {
 			return result;
 		}
@@ -158,7 +162,7 @@ public class LocationService extends Service {
 
 		@Override
 		public void onProviderDisabled(String provider) {
-			Toast.makeText(getApplicationContext(), "GPS disabled", Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), "GPS is disabled, kindly enable it before continuing", Toast.LENGTH_SHORT).show();
 		}
 
 		@Override

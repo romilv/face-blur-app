@@ -24,7 +24,6 @@ public class DisplayImageActivity extends Activity {
 	
 	private Mat mMat;
 	
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		Bundle extras = getIntent().getExtras();
