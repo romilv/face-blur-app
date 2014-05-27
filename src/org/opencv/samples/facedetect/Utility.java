@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.opencv.core.Rect;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -38,6 +39,16 @@ public class Utility {
 	public static final int MEDIA_TYPE_IMAGE = 1;
 	public static final int MEDIA_TYPE_VIDEO = 2;
 	
+	private static Rect[] facesArray;
+	
+	public static Rect[] getFacesArray() {
+		return facesArray;
+	}
+
+	public static void setFacesArray(Rect[] facesArr) {
+		facesArray = facesArr;
+	}
+
 	public static String getHostUrl() {
 		return URL_HOST;
 	}

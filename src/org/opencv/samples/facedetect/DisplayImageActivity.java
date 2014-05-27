@@ -2,57 +2,133 @@ package org.opencv.samples.facedetect;
 
 import java.io.File;
 
-import org.opencv.samples.facedetect.R;
+import org.opencv.core.Core;
+import org.opencv.core.Core.MinMaxLocResult;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.highgui.Highgui;
+import org.opencv.imgproc.Imgproc;
 
-import android.os.Bundle;
-import android.os.Environment;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.Menu;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import org.opencv.core.Mat;
-import org.opencv.highgui.Highgui;
-
 public class DisplayImageActivity extends Activity {
 	
 	private ImageView mImageView;
+	
+	private final String TAG = "myopencv2"; 
+	
 	private String mName;
+	
+	private Rect[] mfacesArray;
+	
 	private File mFile;
-	
-	private Mat mMat;
-	
+	private File mEnvironmentPath;
+	private File mTemplateFile;
+			
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_display_image);
 
-		Bundle extras = getIntent().getExtras();
-		if (extras != null) 
-			mName = extras.getString("PICTURE_NAME");
 		
-		super.onCreate(savedInstanceState);
+		loadImageFromPreviousActivity(savedInstanceState);
+		
+	} // end onCreate()
+	
+	public void loadImageFromPreviousActivity(Bundle savedInstanceState) {
+		
+//		Bundle extras = getIntent().getExtras();
+//		if (extras != null) 
+//			mName = extras.getString("PICTURE_NAME");
 		
 		mImageView = (ImageView) findViewById(R.id.id_captured_img);
 
-    	File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+		mEnvironmentPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+		mName = "picture3.png";
+
     	if (mName != null)
-    		mFile = new File(path, mName);
+    		mFile = new File(mEnvironmentPath, mName);
     	
     	if (mFile.exists()) {
     		Bitmap mBitmap = BitmapFactory.decodeFile(mFile.getAbsolutePath());
     		mImageView.setImageBitmap(mBitmap);
+//    		Toast.makeText(getApplicationContext(), "Image Displayed", Toast.LENGTH_SHORT).show();
+    		matchTemplateOnImage();
     	}
     	else {
     		Toast.makeText(getApplicationContext(), "No image found", Toast.LENGTH_SHORT).show();
     	}
-    	
-    	// modification - reading using opencv and manipulating image accordingly
-    	if (mFile.exists()) {
-    		mMat = Highgui.imread(mFile.toString());    		
-    	}
+	}
+	
+	public void matchTemplateOnImage() {
 		
+		Log.d(TAG, "running template matching");
+		
+		mTemplateFile = new File(mEnvironmentPath, "use_this_marker.png");
+		if (!mTemplateFile.exists()) {
+			Log.d(TAG, "couldnt load template file");
+			return;
+		}
+		
+		Mat image;
+		Mat templateImage;
+		
+		image = Highgui.imread(mFile.toString());
+		templateImage = Highgui.imread(mTemplateFile.toString());
+		
+		
+		// / Create the result matrix
+        int result_cols = image.cols() - templateImage.cols() + 1;
+        int result_rows = image.rows() - templateImage.rows() + 1;
+        Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
+        
+     // / Do the Matching and Normalize
+        int matchMethod = Imgproc.TM_CCOEFF;
+        Imgproc.matchTemplate(image, templateImage, result, matchMethod); // Imgproc.TM_CCOEFF is match_method
+        Core.normalize(result, result, 0, 1, Core.NORM_MINMAX, -1, new Mat());
+        
+     // / Localizing the best match with minMaxLoc
+        MinMaxLocResult mmr = Core.minMaxLoc(result);
+
+        Point matchLoc;
+        if (matchMethod == Imgproc.TM_SQDIFF || matchMethod == Imgproc.TM_SQDIFF_NORMED) {
+            matchLoc = mmr.minLoc;
+        } else {
+            matchLoc = mmr.maxLoc;
+        }
+        
+     // / Show me what you got
+        Core.rectangle(image, matchLoc, new Point(matchLoc.x + templateImage.cols(),
+                matchLoc.y + templateImage.rows()), new Scalar(0, 255, 0));
+        
+        Log.d(TAG, "match x plus cols " + Double.toString(matchLoc.x + templateImage.cols()));
+        Log.d(TAG, "match x " + Double.toString(matchLoc.x));
+        Log.d(TAG, "match cols " + Double.toString(templateImage.cols()));
+        
+        Log.d(TAG, "match y plus rows " + Double.toString(matchLoc.y + templateImage.rows()));
+        Log.d(TAG, "match y " + Double.toString(matchLoc.y));
+        Log.d(TAG, "match rows " + Double.toString(templateImage.rows()));
+        
+        mfacesArray = Utility.getFacesArray();
+        Log.d("facesarray", Integer.toString(mfacesArray.length));
+    
+        // Save the visualized detection.
+        File outFile = new File(mEnvironmentPath, "matched_file.png");
+        Highgui.imwrite(outFile.toString(), image);
+        
+		Bitmap mBitmap = BitmapFactory.decodeFile(outFile.getAbsolutePath());
+		mImageView.setImageBitmap(mBitmap);
 	}
 
 	@Override

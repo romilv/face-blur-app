@@ -51,12 +51,13 @@ import android.widget.Toast;
 
 public class FdActivity extends Activity implements CvCameraViewListener2, SensorEventListener {
 	
-	private static final int SERVER_URL = 2; // 1 to send only users in vicinity, 2 to send list of all users 
+	private static final int SERVER_URL = 1; // 1 to send only users in vicinity, 2 to send list of all users 
 	private static int counter;
+	private static final boolean DEBUG = false;
 	
 	private int numberOfUsers = 0;
 
-    private static final String TAG = "PhotoPrivacy::FDActivity";
+    private static final String TAG = "myopencv1";
     private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
     public static final int        JAVA_DETECTOR       = 0;
     public static final int        NATIVE_DETECTOR     = 1;
@@ -79,6 +80,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
     private float                  mRelativeFaceSize   = 0.2f;
     private int                    mAbsoluteFaceSize   = 0;
     
+    // making this global instead of passing over intent
     private Rect[] facesArray;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
@@ -280,8 +282,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
         }
 
         facesArray = faces.toArray();
+        Utility.setFacesArray(facesArray);
+        
         for (int i = 0; i < facesArray.length; i++) {
             Core.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
+//            Log.d(TAG, "x " + facesArray[i].x);
+//            Log.d(TAG, "y " + facesArray[i].y);
+//            Log.d(TAG, "tl " + facesArray[i].tl());
+//            Log.d(TAG, "br " + facesArray[i].br());
         }
         
         // if take a picture flag is set, then save image
@@ -313,21 +321,28 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
     	FdActivity.this.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
+				if (DEBUG) {
 				Toast.makeText(getApplicationContext(), "Image captured", Toast.LENGTH_SHORT).show();
 	        	Toast.makeText(getApplicationContext(), mCompassDirection, Toast.LENGTH_SHORT).show();
 	        	Toast.makeText(getApplicationContext(), numberOfUsers + " users found in vincinity", Toast.LENGTH_SHORT).show();
+			
+				}
 			}
 		});
     	
-        Mat face;
-        String faceName;
-        
-    	for (int i = 0; i < facesArrayLength; i++) {
-    		faceName = "Face" + i + ".png";
-    		face = mRgba.submat(facesArray[i]);
-    		Imgproc.GaussianBlur(face, face, new Size(95, 95), 0);
-    		saveImage(face, faceName, false);
-    	}
+    	// uncomment this
+    	
+//        Mat face;
+//        String faceName;
+//        
+//    	for (int i = 0; i < facesArrayLength; i++) {
+//    		faceName = "Face" + i + ".png";
+//    		face = mRgba.submat(facesArray[i]);
+//    		Imgproc.GaussianBlur(face, face, new Size(95, 95), 0);
+//    		saveImage(face, faceName, false);
+//    	}
+    	
+    	// end uncomment this
     	
     	// only need to process if saving the image
     	processMat(mRgba);
@@ -369,6 +384,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 					Intent intent = new Intent(getApplicationContext(), DisplayImageActivity.class);
 					intent.putExtra("PICTURE_NAME", name);
 					intent.putExtra("PHONE_DIRECTION", mCompassDirection);
+//					intent.putExtra("FACES_ARRAY", facesArray);
 					startActivity(intent);
 				}
 			});
@@ -509,6 +525,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 			countSE = directionMap.get(SE);
 			countSW = directionMap.get(SW);
 			
+			Log.d("compass NW", Integer.toString(countNW));
+			Log.d("compass NE", Integer.toString(countNE));
+			Log.d("compass SW", Integer.toString(countSW));
+			Log.d("compass SE", Integer.toString(countSE));
+
+			
 			// find direction with highest count
 			int direction = countNW > countNE ? NW : NE;
 			int directionCount = countNW > countNE ? countNW : countNE;
@@ -606,6 +628,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
 				e.printStackTrace();
 			}
 			
+			Log.d("http", result);
 			if(!result.trim().equalsIgnoreCase("no user found")) {
 				jsonArray = Utility.convertStringToJSON(result);
 			}

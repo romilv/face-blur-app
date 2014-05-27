@@ -28,5 +28,6 @@
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_location_parameters">LocationParametersActivity</string>
     <string name="title_activity_http_post">HttpPostActivity</string>
+    <string name="title_activity_template_matching">TemplateMatchingActivity</string>
 
 </resources>
