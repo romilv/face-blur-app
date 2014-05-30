@@ -286,10 +286,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2, Senso
         
         for (int i = 0; i < facesArray.length; i++) {
             Core.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
-//            Log.d(TAG, "x " + facesArray[i].x);
-//            Log.d(TAG, "y " + facesArray[i].y);
-//            Log.d(TAG, "tl " + facesArray[i].tl());
-//            Log.d(TAG, "br " + facesArray[i].br());
         }
         
         // if take a picture flag is set, then save image

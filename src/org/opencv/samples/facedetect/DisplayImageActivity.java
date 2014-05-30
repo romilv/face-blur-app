@@ -9,6 +9,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
@@ -30,7 +31,7 @@ public class DisplayImageActivity extends Activity {
 	
 	private String mName;
 	
-	private Rect[] mfacesArray;
+	private Rect[] mFacesArray;
 	
 	private File mFile;
 	private File mEnvironmentPath;
@@ -112,6 +113,9 @@ public class DisplayImageActivity extends Activity {
         Core.rectangle(image, matchLoc, new Point(matchLoc.x + templateImage.cols(),
                 matchLoc.y + templateImage.rows()), new Scalar(0, 255, 0));
         
+        Log.d(TAG, "image rows " + image.rows());
+        Log.d(TAG, "image cols " + image.cols());
+        
         Log.d(TAG, "match x plus cols " + Double.toString(matchLoc.x + templateImage.cols()));
         Log.d(TAG, "match x " + Double.toString(matchLoc.x));
         Log.d(TAG, "match cols " + Double.toString(templateImage.cols()));
@@ -120,8 +124,40 @@ public class DisplayImageActivity extends Activity {
         Log.d(TAG, "match y " + Double.toString(matchLoc.y));
         Log.d(TAG, "match rows " + Double.toString(templateImage.rows()));
         
-        mfacesArray = Utility.getFacesArray();
-        Log.d("facesarray", Integer.toString(mfacesArray.length));
+        double markerTopLeftRow = matchLoc.x;
+        
+        mFacesArray = Utility.getFacesArray();
+        Log.d("facesarray", Integer.toString(mFacesArray.length));
+        
+        for (int i = 0; i < mFacesArray.length; i++) {
+        	
+        	boolean blurFlag = false;
+        	
+        	Log.d(TAG, "i " + i);
+        	Log.d(TAG, "x " + mFacesArray[i].x);
+        	Log.d(TAG, "y " + mFacesArray[i].y);
+        	Log.d(TAG, "tl " + mFacesArray[i].tl());
+        	Log.d(TAG, "br " + mFacesArray[i].br());
+        	
+        	// heuristic, if rows within 30 pixels of each other, blur out face
+        	double faceTopLeftRow = mFacesArray[i].x;
+        	 
+        	if (faceTopLeftRow > markerTopLeftRow) {
+        		if (faceTopLeftRow - markerTopLeftRow < 30)
+        			blurFlag = true;
+        	} else {
+        		if (markerTopLeftRow - faceTopLeftRow < 30)
+        			blurFlag = true;
+        	}
+        	
+        	if (blurFlag) {
+        		Mat face = image.submat(mFacesArray[i]);
+        		Imgproc.GaussianBlur(face, face, new Size(95, 95), 0);
+        		face.release();
+        	}
+        }
+        // do not use this, makes image blue?
+//        Imgproc.cvtColor(image, image, Imgproc.COLOR_BGR2RGB);
     
         // Save the visualized detection.
         File outFile = new File(mEnvironmentPath, "matched_file.png");
