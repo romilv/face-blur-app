@@ -24,3 +24,6 @@ proguard/
 
 # NDK files
 obj/
+
+#Documents
+README2.md
